@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administrador - Reportes de Asistencia</title>
+
+  <!-- Bulma CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <!-- FontAwesome para íconos -->
+  <script src="https://kit.fontawesome.com/a2d9d5b9d4.js" crossorigin="anonymous"></script>
+
+  <style>
+    /* Fondo general de la página */
+    body {
+      background-color: #f3f0ff;
+      min-height: 100vh;
+    }
+
+    /* Gradiente morado en navbar y hero */
+    .navbar, .hero {
+      background: linear-gradient(135deg, #6b21a8, #9333ea);
+    }
+
+    /* Texto blanco para navbar y hero */
+    .navbar .navbar-item,
+    .hero .title,
+    .hero .subtitle {
+      color: white !important;
+    }
+
+    /* Botón morado con efecto hover */
+    .button-purple {
+      background-color: #7c3aed;
+      color: white;
+      border: none;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .button-purple:hover {
+      background-color: #5b21b6;
+      transform: translateY(-2px);
+    }
+
+    /* Mensaje de notificación estilizado */
+    .notification-custom {
+      background-color: #ede9fe;
+      color: #4c1d95;
+      font-weight: 600;
+    }
+
+    /* Tabla con fondo lila más oscuro y filas alternadas */
+    table tbody {
+      background-color: #ede9fe;
+    }
+
+    table tbody tr:nth-child(even) {
+      background-color: #e0d4f7;
+    }
+
+    /* Colores de check según estado */
+    .check-verde { color: #15803d; font-weight: bold; }
+    .check-amarillo { color: #facc15; font-weight: bold; }
+    .check-rojo { color: #ef4444; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR moderno -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item has-text-weight-semibold" href="#">
+        <span class="icon"><i class="fas fa-chalkboard-teacher"></i></span>
+        <span>Panel de Administrador</span>
+      </a>
+    </div>
+    <div class="navbar-end">
+      <div class="navbar-item">
+        <button class="button is-light" onclick="window.location.href='index.html'">
+          <span class="icon"><i class="fas fa-sign-out-alt"></i></span>
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO HEADER con gradiente -->
+  <section class="hero is-small">
+    <div class="hero-body has-text-centered">
+      <p class="title is-3">📋 Reportes de Asistencia</p>
+      <p class="subtitle is-5">Consulta los registros diarios de cada curso</p>
+    </div>
+  </section>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <section class="section">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-10">
+          <div class="card">
+            <!-- Encabezado de tarjeta morado -->
+            <header class="card-header" style="background-color:#7c3aed;">
+              <p class="card-header-title has-text-white">
+                <span class="icon mr-2"><i class="fas fa-calendar-alt"></i></span>
+                Filtro por fecha
+              </p>
+            </header>
+
+            <div class="card-content">
+              <!-- Selector de fecha con botón morado -->
+              <div class="columns is-vcentered is-centered mb-4">
+                <div class="column is-narrow">
+                  <div class="field has-addons">
+                    <div class="control">
+                      <input id="fechaReporte" class="input is-rounded" type="date" style="border-color:#7c3aed;">
+                    </div>
+                    <div class="control">
+                      <button id="btnVer" class="button button-purple is-rounded">
+                        <span class="icon"><i class="fas fa-search"></i></span>
+                        <span>Ver Asistencias</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mensaje informativo -->
+              <div id="mensaje" class="notification notification-custom is-hidden has-text-centered">
+                <strong>Seleccione una fecha</strong> para ver los registros.
+              </div>
+
+              <!-- Tabla de reporte con filas alternadas -->
+              <div class="table-container mt-5">
+                <table class="table is-striped is-hoverable is-fullwidth" id="tablaReporte">
+                  <thead>
+                    <tr style="background-color:#7c3aed; color:white;">
+                      <th>Alumno</th>
+                      <th class="has-text-centered">Presente</th>
+                      <th class="has-text-centered">Tarde</th>
+                      <th class="has-text-centered">Ausente</th>
+                    </tr>
+                  </thead>
+                  <tbody class="has-text-centered"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="has-text-centered mt-5">
+            <p class="is-size-7 has-text-grey">
+              Sistema de Asistencias - Colegio Santa María © 2025
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCRIPT -->
+  <script>
+    const btnVer = document.getElementById("btnVer");
+    const tabla = document.querySelector("#tablaReporte tbody");
+    const mensaje = document.getElementById("mensaje");
+
+    btnVer.addEventListener("click", () => {
+      const fecha = document.getElementById("fechaReporte").value;
+      tabla.innerHTML = "";  
+      mensaje.classList.add("is-hidden"); 
+
+      if (!fecha) {
+        mensaje.classList.remove("is-hidden");
+        mensaje.classList.add("is-warning");
+        mensaje.textContent = "⚠️ Debe seleccionar una fecha.";
+        return;
+      }
+
+      const asistencias = JSON.parse(localStorage.getItem("asistencias")) || {};
+      const registros = asistencias[fecha] || [];
+
+      if (registros.length === 0) {
+        mensaje.classList.remove("is-hidden");
+        mensaje.classList.add("is-info");
+        mensaje.textContent = "No hay asistencias registradas para esta fecha.";
+        return;
+      }
+
+      registros.forEach(r => {
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+          <td>${r.nombre}</td>
+          <td>${r.estado === "Presente" ? '<span class="check-verde">✔️</span>' : ''}</td>
+          <td>${r.estado === "Tarde" ? '<span class="check-amarillo">✔️</span>' : ''}</td>
+          <td>${r.estado === "Ausente" ? '<span class="check-rojo">✔️</span>' : ''}</td>
+        `;
+        tabla.appendChild(fila);
+      });
+    });
+  </script>
+</body>
+</html>

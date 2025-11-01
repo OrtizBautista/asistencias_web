@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Preceptor - Registro de Asistencia</title>
+
+  <!-- Bulma CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <!-- FontAwesome para íconos -->
+  <script src="https://kit.fontawesome.com/a2d9d5b9d4.js" crossorigin="anonymous"></script>
+
+  <style>
+    /* Fondo de la página */
+    body {
+      background-color: #d1fae5; /* Verde muy claro */
+    }
+
+    /* Contenedor de botones de asistencia */
+    .asistencia-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem; /* Separación entre botones */
+    }
+
+    /* Estilo de los botones de asistencia */
+    .asistencia-buttons button {
+      border-radius: 50%;  /* Botón redondo */
+      width: 2.5rem;
+      height: 2.5rem;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    /* Animación al pasar el mouse */
+    .asistencia-buttons button:hover {
+      transform: scale(1.1);
+      opacity: 0.8;
+    }
+
+    /* Colores de los estados de asistencia */
+    .presente { background-color: #199646; }   /* Verde oscuro */
+    .tarde { background-color: #facc15; }      /* Amarillo */
+    .ausente { background-color: #ef4444; }    /* Rojo */
+
+    /* Botón seleccionado */
+    .seleccionado {
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
+      transform: scale(1.1);
+    }
+
+    /* Fondo de la tabla */
+    tbody {
+      background-color: #f0fdf4; /* Verde muy suave */
+    }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar is-success"> <!-- Verde oscuro principal -->
+    <div class="navbar-brand">
+      <a class="navbar-item has-text-weight-semibold" href="#">
+        <span class="icon"><i class="fas fa-user-check"></i></span>
+        <span>Panel del Preceptor</span>
+      </a>
+    </div>
+    <div class="navbar-end">
+      <div class="navbar-item">
+        <!-- Botón para cerrar sesión -->
+        <button class="button is-light" onclick="window.location.href='index.html'">
+          <span class="icon"><i class="fas fa-sign-out-alt"></i></span>
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO HEADER -->
+  <section class="hero is-success is-small">
+    <div class="hero-body has-text-centered">
+      <p class="title is-3">📅 Registro de Asistencias</p>
+      <p class="subtitle is-5">Marca la asistencia de cada alumno</p>
+    </div>
+  </section>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <section class="section">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-10">
+          <div class="card">
+            <!-- Encabezado de la tarjeta -->
+            <header class="card-header has-background-success">
+              <p class="card-header-title has-text-white">
+                <span class="icon mr-2"><i class="fas fa-clipboard-check"></i></span>
+                Asistencia diaria
+              </p>
+            </header>
+
+            <!-- Contenido de la tarjeta -->
+            <div class="card-content">
+              <div class="field is-grouped is-justify-content-center mb-4">
+                <!-- Selector de fecha -->
+                <div class="control">
+                  <input id="fechaAsistencia" class="input is-rounded is-success" type="date">
+                </div>
+                <!-- Botón para guardar asistencia -->
+                <div class="control">
+                  <button id="btnGuardar" class="button is-success is-rounded">
+                    <span class="icon"><i class="fas fa-save"></i></span>
+                    <span>Guardar Asistencia</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tabla de alumnos -->
+              <div class="table-container">
+                <table class="table is-striped is-hoverable is-fullwidth">
+                  <thead>
+                    <tr class="has-background-success has-text-white">
+                      <th>Alumno</th>
+                      <th class="has-text-centered">Marcar Asistencia</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaAlumnos" class="has-text-centered"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="has-text-centered mt-5">
+            <p class="is-size-7 has-text-grey">Sistema de Asistencias - Colegio Santa María © 2025</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCRIPT -->
+  <script>
+    // Lista de alumnos
+    const alumnos = [
+      "Ortiz Bautista","Romero Mia","Fernandez Lucia","Rodriguez Abril","Bedoya Agustina",
+      "Rodriguez Ariana","Cortez Bruno","Omiñuka Bruno","Portillo Catalina","Comparin Sofia",
+      "Godoy Daniela","Britez Dinara","Cribb Elias","Rios Enzo","Pereira Franco","Rodiguez Joaquin",
+      "Barzala Israel","Tschopp Juan","Damus Juan Lukas","Botello Matias","Figueredo Francisco",
+      "Retamozo Nicolas","Oriana Sosa Batista","Alegre Siomara","Ruiz Diaz Sofia","Gimenez Tanya",
+      "Bautista Victoria","Alonso Maira","Abimaela ","Josefina","Galarza Lautaro","Paiz Martina"
+    ];
+
+    const tabla = document.getElementById("tablaAlumnos");
+    const btnGuardar = document.getElementById("btnGuardar");
+
+    // Crear filas de la tabla con botones de asistencia
+    alumnos.forEach(nombre => {
+      const fila = document.createElement("tr");
+      fila.innerHTML = `
+        <td>${nombre}</td>
+        <td>
+          <div class="asistencia-buttons">
+            <button class="presente" data-estado="Presente" title="Presente"></button>
+            <button class="tarde" data-estado="Tarde" title="Tarde"></button>
+            <button class="ausente" data-estado="Ausente" title="Ausente"></button>
+          </div>
+        </td>
+      `;
+      tabla.appendChild(fila);
+    });
+
+    // Lógica para seleccionar un estado de asistencia
+    tabla.addEventListener("click", e => {
+      if (e.target.tagName === "BUTTON") {
+        const grupo = e.target.parentElement.querySelectorAll("button");
+        grupo.forEach(btn => btn.classList.remove("seleccionado"));
+        e.target.classList.add("seleccionado");
+      }
+    });
+
+    // Guardar asistencia en localStorage
+    btnGuardar.addEventListener("click", () => {
+      const fecha = document.getElementById("fechaAsistencia").value;
+      if (!fecha) {
+        alert("⚠️ Debe seleccionar una fecha.");
+        return;
+      }
+
+      const registros = [];
+      document.querySelectorAll("#tablaAlumnos tr").forEach(fila => {
+        const nombre = fila.querySelector("td:first-child").textContent;
+        const seleccionado = fila.querySelector(".seleccionado");
+        const estado = seleccionado ? seleccionado.dataset.estado : "Sin marcar";
+        registros.push({ nombre, estado });
+      });
+
+      const asistencias = JSON.parse(localStorage.getItem("asistencias")) || {};
+      asistencias[fecha] = registros;
+      localStorage.setItem("asistencias", JSON.stringify(asistencias));
+
+      alert("✅ Asistencia guardada correctamente.");
+    });
+  </script>
+</body>
+</html>
